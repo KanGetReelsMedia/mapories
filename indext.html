@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mapories | The Living Thread</title>
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&family=Sacramento&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 
+
+    <!-- External Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- PWA IMMERSIVE LOADING SCREEN -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1 class="loading-logo">Mapories</h1>
+            <div class="loading-bar-container">
+                <div class="loading-bar-progress"></div>
+            </div>
+            <div class="loading-status">INITIALIZING DATA THREAD...</div>
+        </div>
+    </div>
+
+    <!-- Background Grid & Effects -->
+    <div id="grid-container"></div>
+    <div class="vignette"></div>
+
+    <!-- Top UI Elements -->
+    <header id="main-header">
+        <h1 class="logo-text">Mapories</h1>
+    </header>
+
+    <div class="top-controls" id="top-ui">
+        <button class="relive-btn" onclick="openReliveSearch()">
+            <span class="material-icons">auto_awesome</span> RELIVE
+        </button>
+    </div>
+
+    <!-- Playback View Overlay -->
+    <div id="playback-ui">
+        <div id="pb-date"></div>
+        <div class="playback-subtitle">REPLAYING DATA THREAD</div>
+    </div>
+
+    <!-- Timeline Workspace -->
+    <div id="timeline-viewport">
+        <div class="memory-track" id="memory-track">
+            <svg id="thread-layer"></svg>
+        </div>
+    </div>
+
+    <!-- Bottom Action Controls -->
+    <div class="controls" id="bottom-ui">
+        <div id="year-display" class="year-pill">2026</div>
+        <button class="add-btn" onclick="openModal()">
+            <span class="material-icons" style="font-size: 2rem;">add</span>
+        </button>
+    </div>
+
+    <!-- Modal: Add New Entry -->
+    <div class="overlay" id="addModal">
+        <div class="modal">
+            <h2 class="modal-title cyan-glow">New Entry</h2>
+            <input type="text" id="mTitle" placeholder="Memory Title">
+            <textarea id="mNote" placeholder="Describe the moment..." rows="3"></textarea>
+            
+            <div class="form-row">
+                <input type="date" id="mDate">
+                <input type="time" id="mTime">
+            </div>
+            
+            <div class="form-row">
+                <input type="text" id="mLoc" placeholder="Location" style="flex:2">
+                <select id="mWeather" style="flex:1">
+                    <option value="wb_sunny">Sunny</option>
+                    <option value="cloudy">Cloudy</option>
+                    <option value="rainy">Rainy</option>
+                    <option value="ac_unit">Chilly</option>
+                    <option value="nightlight">Night</option>
+                </select>
+            </div>
+            
+            <button class="save-btn commit-btn" onclick="handleSave()">COMMIT TO MEMORY</button>
+            <button class="discard-btn" onclick="closeModal()">DISCARD DATA</button>
+        </div>
+    </div>
+
+    <!-- Modal: Relive Playback Hub -->
+    <div class="overlay" id="reliveModal">
+        <div class="modal" style="border-color: var(--neon-gold);">
+            <h2 class="modal-title gold-glow">Relive Hub</h2>
+            <p class="modal-description">Select a date to scroll through its moments.</p>
+            <input type="date" id="reliveDate" style="border-color: #444;">
+            <button class="save-btn playback-btn" onclick="startRelive()">INITIATE PLAYBACK</button>
+            <button class="discard-btn" onclick="document.getElementById('reliveModal').style.display='none'">EXIT</button>
+        </div>
+    </div>
+
+    <!-- External Logic Script -->
+    <script src="app.js"></script>
+</body>
+</html>
