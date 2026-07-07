@@ -1,20 +1,137 @@
-
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mapories | The Living Thread</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&family=Sacramento&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 
-
     <style>
-        :root {
-            --bg-dark: #050811;
-            --glass: rgba(255, 255, 255, 0.05);
-            --accent-blue: #4A90E2;
-            --accent-pink: #FF69B4;
-            --glow: rgba(74, 144, 226, 0.3);
+        :root { --neon-cyan: #00f2ff; --neon-pink: #ff00d4; --neon-gold: #ffd700; --bg-dark: #05070a; --glass: rgba(10, 14, 20, 0.9); }
+        body { font-family: 'Comfortaa', sans-serif; background-color: var(--bg-dark); color: white; margin: 0; overflow: hidden; height: 100vh; width: 100vw; }
+        
+        #grid-container { position: fixed; inset: -500px; z-index: 0; background-image: linear-gradient(to right, rgba(255, 0, 212, 0.3) 2px, transparent 2px), linear-gradient(to bottom, rgba(255, 0, 212, 0.3) 2px, transparent 2px); background-size: 60px 60px; transform: perspective(600px) rotateX(45deg); pointer-events: none; transition: opacity 1s; }
+        .vignette { position: fixed; inset: 0; background: radial-gradient(circle at center, transparent 10%, rgba(5, 7, 10, 0.8) 100%); z-index: 1; pointer-events: none; }
+        
+        header { position: fixed; top: 30px; left: 30px; z-index: 100; }
+        .logo-text { font-family: 'Sacramento', cursive; font-size: 3rem; color: var(--neon-cyan); margin: 0; text-shadow: 0 0 15px var(--neon-cyan); }
+        
+        .top-controls { position: fixed; top: 35px; right: 40px; z-index: 1000; }
+        .relive-btn { background: var(--glass); border: 2px solid var(--neon-gold); color: var(--neon-gold); padding: 12px 28px; border-radius: 30px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; backdrop-filter: blur(10px); }
+
+        #timeline-viewport { position: relative; width: 100vw; height: 100vh; overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; cursor: grab; scroll-behavior: smooth; z-index: 2; }
+        .memory-track { display: flex; padding: 0 50vw; gap: 140px; align-items: center; height: 100%; position: relative; }
+        
+        .mem-card { min-width: 300px; background: rgba(10, 15, 25, 0.95); backdrop-filter: blur(25px); border: 1px solid rgba(0, 242, 255, 0.2); padding: 25px; border-radius: 20px; position: relative; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .mem-card img { width: 100%; border-radius: 10px; margin-bottom: 15px; display: block; object-fit: cover; max-height: 200px; }
+        .card-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--neon-cyan); margin-bottom: 12px; }
+        .share-btn { background: none; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 0.7rem; margin-top: 10px; }
+
+        .controls { position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; align-items: center; gap: 20px; background: var(--glass); padding: 15px 30px; border-radius: 60px; border: 1px solid rgba(255,255,255,0.1); }
+        .add-btn { width: 55px; height: 55px; border-radius: 50%; background: var(--neon-cyan); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 3000; overflow-y: auto; }
+        .modal { width: 90%; max-width: 420px; background: #080808; padding: 30px; border-radius: 30px; border: 1px solid var(--neon-cyan); }
+        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; background: #121212; border: 1px solid #222; color: white; border-radius: 12px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+<div id="grid-container"></div>
+<div class="vignette"></div>
+
+<header><h1 class="logo-text">Mapories</h1></header>
+
+<div class="top-controls">
+    <button class="relive-btn" onclick="openReliveSearch()"><span class="material-icons">auto_awesome</span> RELIVE</button>
+</div>
+
+<div id="timeline-viewport">
+    <div class="memory-track" id="memory-track"></div>
+</div>
+
+<div class="controls">
+    <div id="year-display" style="color: var(--neon-cyan); font-weight: bold;">2026</div>
+    <button class="add-btn" onclick="openModal()"><span class="material-icons">add</span></button>
+</div>
+
+<div class="overlay" id="addModal">
+    <div class="modal">
+        <h2 style="color: var(--neon-cyan); text-align: center;">New Entry</h2>
+        <input type="text" id="mTitle" placeholder="Memory Title">
+        <input type="file" id="mPhoto" accept="image/*" capture="environment">
+        <textarea id="mNote" placeholder="Describe the moment..." rows="3"></textarea>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="mDate">
+            <input type="time" id="mTime">
+        </div>
+        <button style="width:100%; padding:15px; background:var(--neon-cyan); border:none; border-radius:15px; cursor:pointer;" onclick="handleSave()">COMMIT TO MEMORY</button>
+    </div>
+</div>
+
+<script>
+    let memories = JSON.parse(localStorage.getItem('mapories_data')) || [];
+
+    function render() {
+        const track = document.getElementById('memory-track');
+        track.innerHTML = '';
+        memories.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'mem-card';
+            card.innerHTML = `
+                ${m.image ? `<img src="${m.image}">` : ''}
+                <div class="card-meta"><span>${m.date}</span><span>${m.time}</span></div>
+                <div style="font-size:1.2rem; font-weight:bold;">${m.title}</div>
+                <p style="color:#aaa; font-size:0.9rem;">${m.note}</p>
+                <button class="share-btn" onclick="shareMemory('${m.id}')">SHARE MOMENT</button>
+            `;
+            track.appendChild(card);
+        });
+    }
+
+    async function handleSave() {
+        const fileInput = document.getElementById('mPhoto');
+        let image = null;
+
+        if (fileInput.files && fileInput.files[0]) {
+            image = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(fileInput.files[0]);
+            });
         }
 
-        body {
-            background-color: var(--bg-dark);
-            color: white;
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-      
+        const data = {
+            id: Date.now(),
+            title: document.getElementById('mTitle').value,
+            note: document.getElementById('mNote').value,
+            date: document.getElementById('mDate').value,
+            time: document.getElementById('mTime').value,
+            image: image
+        };
+
+        memories.push(data);
+        localStorage.setItem('mapories_data', JSON.stringify(memories));
+        document.getElementById('addModal').style.display = 'none';
+        render();
+    }
+
+    async function shareMemory(id) {
+        const m = memories.find(x => x.id == id);
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: m.title,
+                    text: m.note,
+                });
+            } catch (err) { console.log('Share failed', err); }
+        } else {
+            alert("Sharing not supported on this browser.");
+        }
+    }
+
+    function openModal() { document.getElementById('addModal').style.display = 'flex'; }
+    window.onload = render;
+</script>
+</body>
+</html>
