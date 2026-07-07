@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,256 +6,212 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mapories | The Living Thread</title>
 
-    <!-- PWA Manifest Integration -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0A4D8C">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 
 
-    <!-- External Stylesheet Links -->
-    <link rel="stylesheet" href="style.css">
-
     <style>
-        /* CSS Extension for the Photo Vault Grid */
-        .photo-vault-container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 40px auto 120px;
-            padding: 0 20px;
+        :root {
+            --bg-dark: #050811;
+            --glass: rgba(255, 255, 255, 0.05);
+            --accent-blue: #4A90E2;
+            --accent-pink: #FF69B4;
+            --glow: rgba(74, 144, 226, 0.3);
         }
 
-        .vault-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            padding-bottom: 10px;
-        }
-
-        .vault-header h2 {
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #4A90E2;
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Outfit', sans-serif;
             margin: 0;
-            font-weight: 700;
+            overflow-x: hidden;
         }
 
-        .vault-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
+        /* Pink Grid Background */
+        .pink-grid-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; z-index: -10;
+            opacity: 0.15;
+            background-image: 
+                linear-gradient(rgba(255, 105, 180, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 105, 180, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        .vault-item {
-            position: relative;
-            aspect-ratio: 1 / 1;
-            border-radius: 16px;
-            overflow: hidden;
-            background: rgba(13, 20, 38, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.3s;
+        /* Modal & UI Elements */
+        .modal {
+            background: rgba(13, 20, 38, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px var(--glow);
+            width: 90%; max-width: 400px;
+            margin: 50px auto;
         }
 
-        .vault-item:hover {
-            transform: scale(1.04);
-            border-color: #4A90E2;
+        input, textarea {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; padding: 15px; border-radius: 12px;
+            width: 100%; margin-bottom: 15px; box-sizing: border-box;
         }
 
-        .vault-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn {
+            padding: 15px; border: none; border-radius: 12px;
+            font-weight: 700; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; color: white;
         }
+        .btn-save { background: var(--accent-blue); }
+        .btn-share { background: var(--accent-pink); }
+        .btn-delete { background: #8B0000; }
 
-        .vault-caption {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(5, 8, 17, 0.9));
-            padding: 10px;
-            font-size: 0.75rem;
-            color: #FFFFFF;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-weight: 300;
-        }
+        #previewContainer { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        #previewContainer img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
 
-        @media (max-width: 600px) {
-            .vault-grid {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-                gap: 10px;
-            }
+        .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; padding: 20px; }
+        .vault-item { 
+            aspect-ratio: 1/1; border-radius: 16px; overflow: hidden; 
+            border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
         }
+        .vault-item:hover { border-color: var(--accent-pink); box-shadow: 0 0 15px var(--accent-pink); }
     </style>
 </head>
 <body>
 
-    <!-- PWA IMMERSIVE LOADING SCREEN -->
-    <div id="loading-screen">
-        <div class="loading-content">
-            <h1 class="loading-logo">Mapories</h1>
-            <div class="loading-bar-container">
-                <div class="loading-bar-progress"></div>
-            </div>
-            <div class="loading-status">INITIALIZING DATA THREAD...</div>
-        </div>
-    </div>
+    <div class="pink-grid-overlay"></div>
 
-    <!-- Background Grid & Effects -->
-    <div id="grid-container"></div>
-    <div class="vignette"></div>
-
-    <!-- Top UI Elements -->
-    <header id="main-header">
-        <h1 class="logo-text">Mapories</h1>
-    </header>
-
-    <div class="top-controls" id="top-ui">
-        <button class="relive-btn" onclick="openReliveSearch()">
-            <span class="material-icons">auto_awesome</span> RELIVE
-        </button>
-    </div>
-
-    <!-- Playback View Overlay -->
-    <div id="playback-ui">
-        <div id="pb-date"></div>
-        <div class="playback-subtitle">REPLAYING DATA THREAD</div>
-    </div>
-
-    <!-- Timeline Workspace -->
-    <div id="timeline-viewport">
-        <div class="memory-track" id="memory-track">
-            <svg id="thread-layer"></svg>
-        </div>
-    </div>
-
-    <!-- NEW: PHOTO VAULT GALLERY SECTION -->
     <section class="photo-vault-container">
-        <div class="vault-header">
-            <span class="material-icons" style="color: #4A90E2;">collections</span>
-            <h2>Captured Moments</h2>
-        </div>
-        <div class="vault-grid" id="photoVaultGrid">
-            <!-- Dynamic JavaScript injects base64/uploaded layout blocks here -->
-            <div class="vault-item">
-                <img src="https://via.placeholder.com/300?text=No+Photos" alt="Placeholder">
-                <div class="vault-caption">No moments captured yet</div>
-            </div>
-        </div>
+        <h2 style="padding: 20px;">Captured Moments</h2>
+        <div class="vault-grid" id="photoVaultGrid"></div>
     </section>
 
-    <!-- Bottom Action Controls -->
-    <div class="controls" id="bottom-ui">
-        <div id="year-display" class="year-pill">2026</div>
-        <button class="add-btn" onclick="openModal()">
-            <span class="material-icons" style="font-size: 2rem;">add</span>
-        </button>
-    </div>
-
-    <!-- Modal: Add New Entry -->
-    <div class="overlay" id="addModal">
-        <div class="modal">
-            <h2 class="modal-title blue-glow">New Entry</h2>
-            <input type="text" id="mTitle" placeholder="Memory Title">
-            <textarea id="mNote" placeholder="Describe the moment..." rows="3"></textarea>
-            
-            <div class="form-row">
-                <input type="date" id="mDate">
-                <input type="time" id="mTime">
-            </div>
-            
-            <div class="form-row">
-                <input type="text" id="mLoc" placeholder="Location" style="flex:2">
-                <select id="mWeather" style="flex:1">
-                    <option value="wb_sunny">Sunny</option>
-                    <option value="cloudy">Cloudy</option>
-                    <option value="rainy">Rainy</option>
-                    <option value="ac_unit">Chilly</option>
-                    <option value="nightlight">Night</option>
-                </select>
-            </div>
-
-            <!-- Integrated Photo Upload Block -->
-            <div class="form-row photo-upload-row">
-                <label class="photo-capture-label" for="mPhoto">
-                    <span class="material-icons">photo_camera</span> Capture Image
-                </label>
-                <input type="file" id="mPhoto" accept="image/*" onchange="previewImage(event)">
-                <img id="modalPreview" src="#" alt="Thumbnail Preview" style="display: none; max-height: 80px; border-radius: 8px; margin-top: 5px;">
-            </div>
-            
-            <button class="save-btn commit-btn" onclick="handleSave()">COMMIT TO MEMORY</button>
-            <button class="discard-btn" onclick="closeModal()">DISCARD DATA</button>
+    <div class="modal" id="addModal">
+        <h2 class="blue-glow">New Memory</h2>
+        <input type="text" id="mTitle" placeholder="Memory Title">
+        <textarea id="mNote" placeholder="Describe the moment..." rows="3"></textarea>
+        
+        <label class="btn" style="background: #333; display: block; text-align: center;" for="mPhoto">
+            ADD PHOTOS
+        </label>
+        <input type="file" id="mPhoto" accept="image/*" multiple onchange="handleFiles(event)" style="display:none;">
+        <div id="previewContainer"></div>
+        
+        <div class="btn-group">
+            <button class="btn btn-save" onclick="handleSave()">COMMIT TO MEMORY</button>
+            <button class="btn btn-share" onclick="shareMemory()">SHARE TO SOCIAL</button>
+            <button class="btn btn-delete" onclick="deleteMemory()">DELETE ENTRY</button>
         </div>
     </div>
 
-    <!-- Modal: Relive Playback Hub -->
-    <div class="overlay" id="reliveModal">
-        <div class="modal" style="border-color: var(--brand-blue, #0A4D8C);">
-            <h2 class="modal-title blue-glow">Relive Hub</h2>
-            <p class="modal-description">Select a date to scroll through its moments.</p>
-            <input type="date" id="reliveDate" style="border-color: #222;">
-            <button class="save-btn playback-btn" onclick="startRelive()">INITIATE PLAYBACK</button>
-            <button class="discard-btn" onclick="document.getElementById('reliveModal').style.display='none'">EXIT</button>
-        </div>
-    </div>
-
-    <!-- External Logic Script -->
-    <script src="app.js"></script>
-
-    <!-- PWA Background Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registered safely.', reg))
-                    .catch(err => console.log('Service Worker registration failed: ', err));
+        let stagedPhotos = [];
+
+        function handleFiles(event) {
+            const files = event.target.files;
+            const container = document.getElementById('previewContainer');
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    stagedPhotos.push(e.target.result);
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
             });
         }
 
-        // Global base64 storage hook for app.js integration
-        let currentStagedPhoto = "";
-
-        function previewImage(event) {
-            const preview = document.getElementById('modalPreview');
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    currentStagedPhoto = e.target.result;
-                    preview.src = currentStagedPhoto;
-                    preview.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
+        function shareMemory() {
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('mTitle').value || 'My Mapory',
+                    text: 'Reliving a moment on Mapories.',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                alert("Sharing not supported.");
             }
         }
 
-        // Front-end UI display utility function for photo grid injection
-        function updatePhotoVaultUI(memoriesArray) {
-            const vaultGrid = document.getElementById('photoVaultGrid');
-            const photoMemories = memoriesArray.filter(m => m.image && m.image !== "");
-            
-            if (photoMemories.length === 0) {
-                vaultGrid.innerHTML = `
-                    <div class="vault-item" style="grid-column: 1/-1; aspect-ratio: auto; padding: 30px; text-align: center; color: #415370;">
-                        No moments captured yet.
-                    </div>`;
-                return;
+        function deleteMemory() {
+            if (confirm("Discard this memory permanently?")) {
+                stagedPhotos = [];
+                document.getElementById('previewContainer').innerHTML = '';
+                alert("Entry cleared.");
             }
+        }
 
-            vaultGrid.innerHTML = photoMemories.map(item => `
-                <div class="vault-item" onclick="focusTimelineNode('${item.id}')">
-                    <img src="${item.image}" alt="${item.title}">
-                    <div class="vault-caption">${item.title}</div>
-                </div>
-            `).join('');
+        function handleSave() {
+            alert("Memory Committed.");
+            <script>
+    let memories = JSON.parse(localStorage.getItem('mapories_data')) || [];
+    let stagedPhotos = [];
+
+    // Initialize: Load memories on startup
+    window.onload = renderVault;
+
+    function handleFiles(event) {
+        const files = event.target.files;
+        const container = document.getElementById('previewContainer');
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                stagedPhotos.push(e.target.result);
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                container.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function handleSave() {
+        const newMemory = {
+            id: Date.now(),
+            title: document.getElementById('mTitle').value || "Untitled Memory",
+            note: document.getElementById('mNote').value,
+            photos: stagedPhotos
+        };
+        
+        memories.push(newMemory);
+        localStorage.setItem('mapories_data', JSON.stringify(memories));
+        
+        // Reset UI
+        stagedPhotos = [];
+        document.getElementById('previewContainer').innerHTML = '';
+        document.getElementById('mTitle').value = '';
+        document.getElementById('mNote').value = '';
+        
+        renderVault();
+    }
+
+    function renderVault() {
+        const grid = document.getElementById('photoVaultGrid');
+        grid.innerHTML = memories.map(m => `
+            <div class="vault-item">
+                <img src="${m.photos[0] || 'https://via.placeholder.com/150'}" alt="${m.title}">
+                <div style="padding: 10px; font-size: 0.8rem;">${m.title}</div>
+            </div>
+        `).join('');
+    }
+
+    function deleteMemory() {
+        if (confirm("Discard this memory permanently?")) {
+            memories = []; // Clears the array
+            localStorage.removeItem('mapories_data');
+            renderVault();
+            alert("All memory threads cleared.");
+        }
+    }
+
+    function shareMemory() {
+        if (navigator.share) {
+            navigator.share({ title: 'Mapories', text: 'Check out my memories!', url: window.location.href });
+        }
+    }
+</script>)
         }
     </script>
 </body>
