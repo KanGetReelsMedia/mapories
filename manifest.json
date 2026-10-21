@@ -1,22 +1,25 @@
 {
-  "short_name": "Mapories",
   "name": "Mapories The Living Thread",
+  "short_name": "Mapories",
   "description": "Helping shape, weave, and preserve your most meaningful memories.",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": "/index.html",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
   "background_color": "#05070a",
   "theme_color": "#00f2ff",
-  "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
