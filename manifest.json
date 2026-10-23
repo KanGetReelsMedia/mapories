@@ -1,13 +1,23 @@
 {
-  "name": "Mapories The Living Thread",
+  "id": "/",
+  "name": "Mapories - The Living Thread",
   "short_name": "Mapories",
-  "description": "Helping shape, weave, and preserve your most meaningful memories.",
-  "start_url": "/",
+  "description": "Helping shape, weave, and preserve your most meaningful memories. Powered by ConnectHub.",
+  "start_url": "/?source=pwa&db=connecthub-60473",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#05070a",
-  "theme_color": "#00f2ff",
-  "orientation": "portrait",
+  "display_override": [
+    "standalone",
+    "window-controls-overlay"
+  ],
+  "background_color": "#0a0a0f",
+  "theme_color": "#ff1a75",
+  "orientation": "portrait-primary",
+  "categories": [
+    "lifestyle",
+    "travel",
+    "social"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -20,6 +30,25 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Open Timeline",
+      "url": "/?shortcut=timeline",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
