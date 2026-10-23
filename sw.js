@@ -1,91 +1,117 @@
-// Mapories The Living Thread - PWA + Push Notifications
-// VAPID: BLWEbNlBPBjYAKc1HLG9pvF6Df83KBB6Fk8KimbKvgXsEvL_AlRDAE5vw1EgsxtSDEPHrgSNeKW3CBvfW0maCAc
+// Mapories - PWA Service Worker for connecthub-60473
+// RTDB: https://connecthub-60473-default-rtdb.firebaseio.com/
 
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js');
 
+// Your Firebase config for connecthub-60473
+// NOTE: Replace apiKey etc with your real values from Firebase Console > Project Settings > General > Your apps > SDK setup
 firebase.initializeApp({
-  apiKey: "AIzaSyDummy-ConnectHub-60473",
+  apiKey: "AIzaSyDUMMY-REPLACE-WITH-REAL-KEY-FROM-CONSOLE",
   authDomain: "connecthub-60473.firebaseapp.com",
+  databaseURL: "https://connecthub-60473-default-rtdb.firebaseio.com/",
   projectId: "connecthub-60473",
   storageBucket: "connecthub-60473.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef"
+  messagingSenderId: "REPLACE_WITH_REAL_SENDER_ID",
+  appId: "REPLACE_WITH_REAL_APP_ID"
 });
 
-const messaging = firebase.messaging();
+let messaging;
+try {
+  messaging = firebase.messaging();
+} catch(e) { console.log('Messaging not available', e); }
 
-const CACHE_NAME = 'mapories-living-thread-v3-push';
-const ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+const CACHE_NAME = 'mapories-connecthub-60473-v5';
+const CORE_ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
-self.addEventListener('install', e => {
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)).then(()=>self.skipWaiting())
+    caches.open(CACHE_NAME).then((c) => c.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', e => {
+self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE_NAME && k.startsWith('mapories-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => (k.startsWith('mapories-') || k.startsWith('connecthub-')) && k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  const u = new URL(e.request.url);
-  if (u.hostname.includes('firestore.googleapis.com') || u.hostname.includes('firebase') || u.hostname.includes('googleapis') || u.hostname.includes('gstatic') || u.hostname.includes('identitytoolkit')) return;
+self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url);
+  // NEVER cache Firebase RTDB / Firestore / Auth / Functions
+  if (
+    url.hostname.includes('firestore.googleapis.com') ||
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('googleapis') ||
+    url.hostname.includes('gstatic') ||
+    url.hostname.includes('identitytoolkit') ||
+    url.pathname.includes('__/') // Firebase Hosting reserved
+  ) {
+    return; // let browser handle it, no cache
+  }
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).catch(()=>caches.match('/index.html') || caches.match('/')));
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match('/index.html').then((r) => r || caches.match('/')))
+    );
     return;
   }
-  e.respondWith(caches.match(e.request).then(cached=> cached || fetch(e.request).then(res => {
-    if (res.ok && e.request.method === 'GET' && u.origin === location.origin) {
-      const clone = res.clone();
-      caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-    }
-    return res;
-  })));
+  e.respondWith(
+    caches.match(e.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(e.request).then((res) => {
+        if (res.ok && e.request.method === 'GET' && url.origin === location.origin) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => cached);
+    })
+  );
 });
 
-// --- PUSH NOTIFICATIONS ---
-messaging.onBackgroundMessage(payload => {
-  console.log('[SW] Background message', payload);
-  const title = payload.notification?.title || 'Mapories';
-  const options = {
-    body: payload.notification?.body || 'Time to weave a new memory ✨',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [100, 50, 100],
-    data: { url: payload.data?.url || '/' },
-    actions: [
-      { action: 'open', title: 'Open Thread' },
-      { action: 'close', title: 'Later' }
-    ]
-  };
-  self.registration.showNotification(title, options);
-});
-
-self.addEventListener('push', e => {
-  // For Web Push without FCM (fallback)
-  if (e.data) {
-    const data = e.data.json();
-    const title = data.title || 'Mapories';
+// --- Push Notifications ---
+if (messaging) {
+  messaging.onBackgroundMessage((payload) => {
+    console.log('[SW] Background message', payload);
+    const title = payload.notification?.title || 'Mapories';
     const options = {
-      body: data.body || 'Helping shape, weave, and preserve your most meaningful memories.',
+      body: payload.notification?.body || 'Time to weave a new memory ✨',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
-      data: { url: '/' }
+      vibrate: [100, 50, 100],
+      data: { url: payload.data?.url || '/' }
     };
-    e.waitUntil(self.registration.showNotification(title, options));
-  }
+    self.registration.showNotification(title, options);
+  });
+}
+
+self.addEventListener('push', (e) => {
+  if (!e.data) return;
+  try {
+    const data = e.data.json();
+    if (data.notification) return; // handled by FCM above
+    e.waitUntil(
+      self.registration.showNotification(data.title || 'Mapories', {
+        body: data.body || 'New memory in ConnectHub ✨',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: { url: data.url || '/' }
+      })
+    );
+  } catch (err) {}
 });
 
-self.addEventListener('notificationclick', e => {
+self.addEventListener('notificationclick', (e) => {
   e.notification.close();
   if (e.action === 'close') return;
   e.waitUntil(
-    clients.matchAll({type: 'window'}).then(clientList => {
+    clients.matchAll({ type: 'window' }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url === '/' && 'focus' in client) return client.focus();
+        if (client.url.includes(self.location.origin) && 'focus' in client) return client.focus();
       }
       return clients.openWindow(e.notification.data?.url || '/');
     })
